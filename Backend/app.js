@@ -2,6 +2,7 @@ import express from 'express';
 import cors from 'cors';
 import cookieParser from "cookie-parser";
 import MarcasRoutes from './src/Routes/Marcas.js';
+import CelularesRoutes from './src/Routes/Celulares.js';
 
 const app = express();
 
@@ -17,11 +18,7 @@ app.use(express.json());
 
 //ENDPOINTS
 app.use('/api/marcas', MarcasRoutes);
-
-
-//ENDPOINTS
-
-
+app.use('/api/celulares', CelularesRoutes);
 
 
 export default app;

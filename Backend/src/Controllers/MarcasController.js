@@ -9,7 +9,7 @@ MarcasController.getMarcas = async (req, res) => {
 
 MarcasController.insertMarcas = async (req, res) => {
     const {name} = req.body;
-    const newMarcas = new BrachesModel({name});
+    const newMarcas = new MarcasModel({name});
     await newMarcas.save();
     res.json({message: 'Marca creada correctamente'});
 }
@@ -51,7 +51,7 @@ MarcasController.getMarcasPorNombre = async (req, res) => {
     try {
         const {name} = req.body;
 
-        const products = await MarcasModel.find({
+        const marcas = await MarcasModel.find({
             name: { $regex: name, $options: 'i' }
         })
 
