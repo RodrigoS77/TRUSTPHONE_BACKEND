@@ -7,6 +7,7 @@ import ClientesRouter from "./src/Routes/Clientes.js"
 import RegistroClientes from "./src/Routes/RegistroCliente.js"
 import loginClienteController from './src/Routes/LoginClientes.js';
 import LogOutController from './src/Routes/LogOut.js';
+import RecuperarContraseña from './src/Routes/RecuperarContraseña.js'
 
 
 const app = express();
@@ -28,6 +29,7 @@ app.use('/api/clientes', ClientesRouter);
 app.use('/api/registroClientes', RegistroClientes);
 app.use('/api/loginClientes', loginClienteController);
 app.use('/api/logout', LogOutController);
+app.use('/api/RecuperarContrasena', RecuperarContraseña)
 
 
 export default app;
