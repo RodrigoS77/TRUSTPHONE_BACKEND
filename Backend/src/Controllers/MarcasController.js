@@ -3,32 +3,50 @@ import MarcasModel from "../Models/Marcas.js";
 const MarcasController = {}
 
 MarcasController.getMarcas = async (req, res) => {
-    const marcas = await MarcasModel.find();
-    res.json(marcas);
+    try {
+        const marcas = await MarcasModel.find();
+        res.json(marcas);
+    } catch (error) {
+        console.log("error" + error);
+        res.status(500).json({message: 'Error Interno del Servidor'});
+    }
 }
 
 MarcasController.insertMarcas = async (req, res) => {
-    const {name} = req.body;
-    const newMarcas = new MarcasModel({name});
-    await newMarcas.save();
-    res.json({message: 'Marca creada correctamente'});
+    try {
+        const {name} = req.body;
+        const newMarcas = new MarcasModel({name});
+        await newMarcas.save();
+        res.json({message: 'Marca creada correctamente'});
+    } catch (error) {
+        console.log("error" + error);
+        res.status(500).json({message: 'Error Interno del Servidor'});
+    }
 }
 
 MarcasController.updateMarcas = async (req, res) => {
-    const {name} = req.body;
-    await MarcasModel.findByIdAndUpdate(
-        req.params.id,
-        {
-            name
-        },
-        {new: true}
-    );
-    res.json({message: 'Marca actualizada correctamente'});
+    try {
+        const {name} = req.body;
+        await MarcasModel.findByIdAndUpdate(
+            req.params.id,
+            { name },
+            {new: true}
+        );
+        res.json({message: 'Marca actualizada correctamente'});
+    } catch (error) {
+        console.log("error" + error);
+        res.status(500).json({message: 'Error Interno del Servidor'});
+    }
 }
 
 MarcasController.deleteMarcas = async (req, res) => {
-    await MarcasModel.findByIdAndDelete(req.params.id);
-    res.json({message: 'Marca eliminada correctamente'});
+    try {
+        await MarcasModel.findByIdAndDelete(req.params.id);
+        res.json({message: 'Marca eliminada correctamente'});
+    } catch (error) {
+        console.log("error" + error);
+        res.status(500).json({message: 'Error Interno del Servidor'});
+    }
 }
 
 //BUSCAR SOLO 1 POR ID

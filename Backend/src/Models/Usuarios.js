@@ -15,7 +15,7 @@ const UsuariosSchema = new Schema({
     },
     estado: {
         type: String,
-    },
+    },  
     fechaRegistro: {
         type: Date,
         default: Date.now

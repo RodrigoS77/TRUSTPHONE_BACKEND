@@ -40,6 +40,7 @@ RegistroUsuariosController.registerUsuario = async (req, res) => {
             {
                 nombre,
                 email,
+                verificationCode,
                 passwordHash,
                 rol,
                 estado,
@@ -80,7 +81,7 @@ RegistroUsuariosController.registerUsuario = async (req, res) => {
             }
             res
             .status(200)
-            .json({message: "Cliente Registrado, vefica tu correo electronico"})
+            .json({message: "Usuario Registrado, verifica tu correo electronico"})
         })
     } catch (error) {
         console.log("error" + error);
@@ -100,7 +101,7 @@ RegistroUsuariosController.verifyCode = async (req, res) => {
             verificationCode: storedCode,
             nombre,
             passwordHash,
-            telefono,
+            rol,
             estado,
             fechaRegistro,
             isVerified,

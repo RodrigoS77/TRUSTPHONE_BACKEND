@@ -1,3 +1,5 @@
+import bcrypt from 'bcrypt';
+import jsonwebtoken from 'jsonwebtoken';
 import UsersModel from '../Models/Usuarios.js';
 import {config} from "../../config.js"
 
@@ -5,15 +7,15 @@ const loginUsuarioController = {}
 
 loginUsuarioController.login = async (req, res) => {
     try {
-        const { correo, contraseña } = req.body;
+        const { email, contraseña } = req.body;
 
-        const userFound = await UsersModel.findOne({ correo });
+        const userFound = await UsersModel.findOne({ email });
         
         if (!userFound) {
             return res.status(404).json({ message: 'Usuario no encontrado' });
         }
 
-        if (userFound.timeOut && userFound.timeOut > new Date.now()) {
+        if (userFound.timeOut && userFound.timeOut > Date.now()) {
             return res.status(403).json({ message: 'Cuenta bloqueada' });
         }
 
@@ -23,7 +25,7 @@ loginUsuarioController.login = async (req, res) => {
             userFound.loginAttemps = (userFound.loginAttemps || 0) + 1;
 
             if (userFound.loginAttemps >= 5) {
-                userFound.timeOut = new Date.now() + 15 * 60 * 1000;
+                userFound.timeOut = Date.now() + 15 * 60 * 1000;
                 userFound.loginAttemps = 0;
 
                 await userFound.save();

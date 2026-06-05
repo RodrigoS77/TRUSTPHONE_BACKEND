@@ -5,7 +5,10 @@ LogOutController.LogOut = (req, res) => {
         res.clearCookie("AuthCookie");
 
         return res.status(200).json({ message: 'Sesion Cerrada' });
-    } catch (error) {}
+    } catch (error) {
+        console.log("error" + error);
+        return res.status(500).json({ message: 'Error Interno Del Servidor' });
+    }
 }
 
 export default LogOutController;

@@ -16,7 +16,7 @@ loginClienteController.login = async (req, res) => {
             return res.status(404).json({ message: 'Cliente no encontrado' });
         }
 
-        if (userFound.timeOut && userFound.timeOut > new Date.now()) {
+        if (userFound.timeOut && userFound.timeOut > Date.now()) {
             return res.status(403).json({ message: 'Cuenta bloqueada' });
         }
 
@@ -26,7 +26,7 @@ loginClienteController.login = async (req, res) => {
             userFound.loginAttemps = (userFound.loginAttemps || 0) + 1;
 
             if (userFound.loginAttemps >= 5) {
-                userFound.timeOut = new Date.now() + 15 * 60 * 1000;
+                userFound.timeOut = Date.now() + 15 * 60 * 1000;
                 userFound.loginAttemps = 0;
 
                 await userFound.save();

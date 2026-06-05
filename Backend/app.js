@@ -21,8 +21,8 @@ app.use(
     })
 );
 
-app.use(cookieParser());
 app.use(express.json());
+app.use(cookieParser());
 
 //ENDPOINTS
 app.use('/api/marcas', MarcasRoutes);
