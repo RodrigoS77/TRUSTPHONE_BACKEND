@@ -8,7 +8,9 @@ import RegistroClientes from "./src/Routes/RegistroCliente.js"
 import loginClienteController from './src/Routes/LoginClientes.js';
 import LogOutController from './src/Routes/LogOut.js';
 import RecuperarContraseña from './src/Routes/RecuperarContraseña.js'
-
+import UsuariosRoutes from './src/Routes/Usuarios.js'
+import loginUsuarioRoutes from './src/Routes/LoginUsuarios.js';
+import RegistroUsuarioRoutes from './src/Routes/registroUsuario.js';
 
 const app = express();
 
@@ -19,8 +21,8 @@ app.use(
     })
 );
 
-app.use(cookieParser());
 app.use(express.json());
+app.use(cookieParser());
 
 //ENDPOINTS
 app.use('/api/marcas', MarcasRoutes);
@@ -30,6 +32,8 @@ app.use('/api/registroClientes', RegistroClientes);
 app.use('/api/loginClientes', loginClienteController);
 app.use('/api/logout', LogOutController);
 app.use('/api/RecuperarContrasena', RecuperarContraseña)
-
+app.use('/api/usuarios', UsuariosRoutes);
+app.use('/api/loginUsuarios', loginUsuarioRoutes);
+app.use('/api/registroUsuarios', RegistroUsuarioRoutes);
 
 export default app;

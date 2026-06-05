@@ -1,19 +1,18 @@
 import bcrypt from 'bcrypt';
 import jsonwebtoken from 'jsonwebtoken';
-
-import ClienteModel from '../Models/Clientes.js';
+import UsersModel from '../Models/Usuarios.js';
 import {config} from "../../config.js"
 
-const loginClienteController = {}
+const loginUsuarioController = {}
 
-loginClienteController.login = async (req, res) => {
+loginUsuarioController.login = async (req, res) => {
     try {
-        const { correo, contraseña } = req.body;
+        const { email, contraseña } = req.body;
 
-        const userFound = await ClienteModel.findOne({ correo });
+        const userFound = await UsersModel.findOne({ email });
         
         if (!userFound) {
-            return res.status(404).json({ message: 'Cliente no encontrado' });
+            return res.status(404).json({ message: 'Usuario no encontrado' });
         }
 
         if (userFound.timeOut && userFound.timeOut > Date.now()) {
@@ -55,4 +54,4 @@ loginClienteController.login = async (req, res) => {
     }
 }
 
-export default loginClienteController;
+export default loginUsuarioController;

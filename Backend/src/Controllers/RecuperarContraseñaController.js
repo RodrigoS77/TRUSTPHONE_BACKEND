@@ -43,7 +43,7 @@ RecuperarContraseñaController.requestCode = async (req, res) =>{
             from: config.email.user_email,
             to: correo,
             subject: "Correo de recuperacion",
-            body: "Usa este codigo para recuperar tu cuenta",
+            text: "Usa este codigo para recuperar tu cuenta",
             html: HTMLRecuperarCorreo(code)
         }
 
@@ -55,8 +55,6 @@ RecuperarContraseñaController.requestCode = async (req, res) =>{
 
             return res.status(200).json({ message: "Correo Enviado"})
         })
-
-        return res.status(200).json({message: "Si"})
 
     } catch (error) {
         console.log("error" + error)
@@ -96,7 +94,7 @@ RecuperarContraseñaController.newPassword = async (req, res) => {
         const {newPassword, confirNewPassword} = req.body;
 
         if (newPassword !== confirNewPassword) {
-            return res.status(200).json({message: "Las Contraseñas No Coinciden"})
+            return res.status(400).json({message: "Las Contraseñas No Coinciden"})
         }
 
         const token = req.cookies.recoveryCookie;
