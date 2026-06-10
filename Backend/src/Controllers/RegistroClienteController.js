@@ -1,149 +1,150 @@
-import nodemailer from 'nodemailer';
-import crypto from 'crypto';
-import jsonwebtoken from 'jsonwebtoken';
-import bcrypt from 'bcrypt';
+import nodemailer from "nodemailer";
+import crypto from "crypto";
+import jsonwebtoken from "jsonwebtoken";
+import bcryptjs from "bcryptjs";
 
-import ClienteModel from '../Models/Clientes.js';
+import ClienteModel from "../Models/Clientes.js";
+import { config } from "../../config.js";
 
-import {config} from "../../config.js"
+const RegistroClienteController = {};
 
-const RegistroClienteController = {}
-
+// REGISTRAR USUARIO
 RegistroClienteController.registerCliente = async (req, res) => {
+  const {
+    nombre, 
+    Apellido,
+    correo,
+    contraseña,
+    telefono,
+    estado,
+    isVerified,
+    loginAttemps,
+    timeOut
+  } = req.body;
+
+  try {
+    // Verificar si ya existe
+    const existCliente = await ClienteModel.findOne({ correo });
     
-    const {
+    if (existCliente) {
+      return res.status(400).json({message: "El correo ya está registrado"});
+    }
+
+    // Encriptar contraseña
+    const passwordHash = await bcryptjs.hash(contraseña, 10);
+
+    // Generar código
+    const verificationCode = crypto.randomBytes(3).toString("hex");
+
+    // Crear token
+    const tokenCode = jsonwebtoken.sign(
+      {
         nombre,
-        apellido,
+        Apellido,
         correo,
-        contraseña,
+        contraseña: passwordHash,
         telefono,
         estado,
-        fechaRegistro,
         isVerified,
         loginAttemps,
-        timeOut
-    } = req.body;
+        timeOut,
+        verificationCode
+      },
+      config.JWT.secret,
+      { expiresIn: "15m" }
+    );
 
-    try {
-        const existCliente = await ClienteModel.findOne({ correo });
-        if (existCliente) {
-            return res.status(400).json({ message: 'El correo ya esta registrado' });
-        }
+    // Guardar cookie
+    res.cookie("VerificationToken", tokenCode, {
+      maxAge: 15 * 60 * 1000
+    });
 
-        console.log(req.body);
-        console.log("contraseña:", contraseña);
+    // Configurar correo
+    const transporter = nodemailer.createTransport({
+      service: "gmail",
+      auth: {
+        user: config.email.user_email,
+        pass: config.email.user_password
+      }
+    });
 
-        const passwordHash = await bcrypt.hash(contraseña, 10);
+    const mailOptions = {
+      from: config.email.user_email,
+      to: correo,
+      subject: "Código de Verificación",
+      text:"Para verificar tu cuenta utiliza este código: " +
+        verificationCode +". Expira en 15 minutos."
+    };
 
-        const verificationCode = crypto.randomBytes(3).toString('hex');
+    transporter.sendMail(mailOptions, (error, info) => {
 
-        const tokenCode = jsonwebtoken.sign(
-            {
-                correo,
-                verificationCode,
-                nombre,
-                apellido,
-                passwordHash,
-                telefono,
-                estado,
-                fechaRegistro,
-                isVerified,
-                loginAttemps,
-                timeOut
-            },
-            config.JWT.secret,
+      if (error) {
+        console.log(error);
+        return res.status(500).json({message: "Error al enviar el correo"});
+      }
 
-            {expiresIn: '15min'}
-        );
+      return res.status(200).json({message: "Usuario registrado, verifica tu correo"});
 
-        res.cookie("VerificationToken", tokenCode, {maxAge: 15 * 60 * 1000});
-
-        const transporter = nodemailer.createTransport({
-            service: 'gmail',
-            auth:{
-                user: config.email.user_email,
-                pass: config.email.user_password,
-            },
-        });
-
-        const mailOptions = {
-            from: config.email.user_email,
-            to: correo,
-            subject: 'Codigo de Verificacion',
-            text: 
-                "Para verificar tu cuenta, utiliza este código: " + 
-                verificationCode +
-                "expira en 15 minutos."
-        };
-
-        transporter.sendMail(mailOptions, (error, info) => {
-            if (error) {
-                console.log("error" + error);
-                return res.status(500).json({ message: 'Error' });
-            }
-            res
-            .status(200)
-            .json({message: "Cliente Registrado, vefica tu correo electronico"})
-        })
-    } catch (error) {
-        console.log("error" + error);
-        return res.status(500).json({ message: 'Error Interno Del Servidor' });
-    }
-}
-
+    });
+  } catch (error) {
+    console.log(error);
+    return res.status(500).json({message: "Error interno del servidor"});
+  }
+};
+// VERIFICAR CÓDIGO
 RegistroClienteController.verifyCode = async (req, res) => {
-    try {
-        const { verificationCodeRequest } = req.body;
+  try {
+    const { verificationCodeRequest } = req.body;
 
-        const token = req.cookies.VerificationToken;
+    const token = req.cookies.VerificationToken;
 
-        const decoded = jsonwebtoken.verify(token, config.JWT.secret);
-        const {
-            correo,
-            verificationCode: storedCode,
-            nombre,
-            apellido,
-            passwordHash,
-            telefono,
-            estado,
-            fechaRegistro,
-            isVerified,
-            loginAttemps,
-            timeOut
-        } = decoded;
+    const decoded = jsonwebtoken.verify(
+      token,
+      config.JWT.secret
+    );
 
-        if (verificationCodeRequest !== storedCode) {
-            return res.status(400).json({ message: 'Codigo de Verificacion Invalido' });
-        }
+    const {
+      nombre,
+      Apellido,
+      correo,
+      contraseña,
+      telefono,
+      estado,
+      verificationCode: storedCode,
+      loginAttemps,
+      timeOut
+    } = decoded;
 
-        const newCliente = new ClienteModel({
-            nombre,
-            apellido,
-            correo,
-            contraseña: passwordHash,
-            telefono,
-            estado,
-            fechaRegistro,
-            isVerified,
-            loginAttemps,
-            timeOut
-        });
-
-        await newCliente.save();
-
-
-        const cliente = await ClienteModel.findOne({ correo });
-        cliente.isVerified = true;
-        await cliente.save();
-
-        res.clearCookie("VerificationToken");
-
-        res.json({message: "Cuenta verificada correctamente"});
-
-    } catch (error) {
-        console.log("error" + error);
-        return res.status(500).json({ message: 'Error Interno Del Servidor' });
+    // Comparar códigos
+    if (verificationCodeRequest.trim().toLowerCase() !==storedCode.toLowerCase()) 
+    {
+      return res.status(400).json({message: "Código de verificación inválido"});
     }
-}
+
+    // Crear usuario
+    const newCliente = new ClienteModel({
+      nombre,
+      Apellido,
+      correo,
+      contraseña,
+      telefono,
+      estado,
+      isVerified: true,
+      loginAttemps,
+      timeOut
+    });
+
+    await newCliente.save();
+
+    // Borrar cookie
+    res.clearCookie("VerificationToken");
+
+    return res.status(200).json({message: "Cuenta verificada correctamente"});
+
+  } catch (error) {
+    console.log(error);
+    return res.status(500).json({message: "Error interno del servidor"});
+  }
+};
 
 export default RegistroClienteController;

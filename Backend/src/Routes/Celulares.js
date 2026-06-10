@@ -6,17 +6,11 @@ const router = express.Router();
 
 router.route("/")
   .get(celularesController.getAllCelulares)
-  .post(
-    upload.single("imagen"),
-    celularesController.insertCelular
-  );
+  .post(upload.single("imagen"),celularesController.insertCelular);
 
 router.route("/:id")
   .get(celularesController.getCelularById)
-  .put(
-    upload.single("imagen"),
-    celularesController.updateCelular
-  )
+  .put(upload.single("imagen"),celularesController.updateCelular)
   .delete(celularesController.deleteCelular);
 
-export default router;
+export default router; 

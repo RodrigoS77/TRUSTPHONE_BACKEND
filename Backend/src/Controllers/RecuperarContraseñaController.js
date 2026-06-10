@@ -2,7 +2,6 @@ import jsonwebtoken from "jsonwebtoken"
 import bcrypt from "bcrypt"
 import crypto from "crypto"
 import nodemailer from "nodemailer"
-import HTMLRecuperarCorreo from "../utils/enviarCorreoRecuperacion.js"
 
 import { config } from "../../config.js"
 import ClienteModel from "../Models/Clientes.js"
@@ -34,7 +33,7 @@ RecuperarContraseñaController.requestCode = async (req, res) =>{
         const transport = nodemailer.createTransport({
             service: "gmail",
             auth: {
-                user: config.email.user_email,
+                user: config.email.user_email, 
                 pass: config.email.user_password,
             },
         });
@@ -44,7 +43,7 @@ RecuperarContraseñaController.requestCode = async (req, res) =>{
             to: correo,
             subject: "Correo de recuperacion",
             text: "Usa este codigo para recuperar tu cuenta",
-            html: HTMLRecuperarCorreo(code)
+            html: `<p>Usa este codigo para recuperar tu cuenta: <strong>${code}</strong></p>`
         }
 
         transport.sendMail(mailOptions, (error, info) =>{
