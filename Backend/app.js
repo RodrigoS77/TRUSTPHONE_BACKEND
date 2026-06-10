@@ -11,6 +11,8 @@ import RecuperarContraseña from './src/Routes/RecuperarContraseña.js'
 import UsuariosRoutes from './src/Routes/Usuarios.js'
 import loginUsuarioRoutes from './src/Routes/LoginUsuarios.js';
 import RegistroUsuarioRoutes from './src/Routes/registroUsuario.js';
+import TecnicosRoutes from "./src/Routes/Tecnicos.js";
+import RevisionCelularesRoutes from "./src/Routes/RevisionCelulares.js";
 
 const app = express();
 
@@ -35,5 +37,7 @@ app.use('/api/RecuperarContrasena', RecuperarContraseña)
 app.use('/api/usuarios', UsuariosRoutes);
 app.use('/api/loginUsuarios', loginUsuarioRoutes);
 app.use('/api/registroUsuarios', RegistroUsuarioRoutes);
+app.use('/api/tecnicos', TecnicosRoutes);
+app.use('/api/revisionCelulares', RevisionCelularesRoutes);
 
 export default app;
