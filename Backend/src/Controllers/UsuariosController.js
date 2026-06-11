@@ -27,27 +27,6 @@ UsuariosController.getUsuarioById = async (req, res) => {
     }
 };
 
-// INSERT
-UsuariosController.insertUsuario = async (req, res) => {
-    try {
-        const { nombre, email, contraseña, rol, estado } = req.body;
-
-        const newUsuario = new UsuariosModel({
-            nombre,
-            email,
-            contraseña,
-            rol,
-            estado
-        });
-
-        await newUsuario.save();
-        res.status(201).json({ message: "Usuario creado correctamente" });
-    } catch (error) {
-        console.log("error", error);
-        res.status(500).json({ message: "Error interno del servidor" });
-    }
-};
-
 // UPDATE
 UsuariosController.updateUsuario = async (req, res) => {
     try {
