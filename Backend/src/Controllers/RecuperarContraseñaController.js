@@ -107,7 +107,7 @@ RecuperarContraseñaController.newPassword = async (req, res) => {
 
         await ClienteModel.findOneAndUpdate(
             {correo: decoded.correo},
-            {contraseña: passwordHash},
+            {contrasena: passwordHash},
             {new: true},
         );
 
