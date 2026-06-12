@@ -8,143 +8,203 @@ import { config } from "../../config.js";
 
 const RegistroClienteController = {};
 
-// REGISTRAR USUARIO
+// REGISTRAR CLIENTE
 RegistroClienteController.registerCliente = async (req, res) => {
-  const {
-    nombre, 
-    Apellido,
-    correo,
-    contraseña,
-    telefono,
-    estado,
-    isVerified,
-    loginAttemps,
-    timeOut
-  } = req.body;
+    try {
 
-  try {
-    // Verificar si ya existe
-    const existCliente = await ClienteModel.findOne({ correo });
-    
-    if (existCliente) {
-      return res.status(400).json({message: "El correo ya está registrado"});
-    }
+        const {
+            nombre,
+            Apellido,
+            correo,
+            contrasena,
+            telefono,
+            estado,
+            loginAttemps,
+            timeOut
+        } = req.body;
 
-    // Encriptar contraseña
-    const passwordHash = await bcryptjs.hash(contraseña, 10);
+        // Verificar si el correo ya existe
+        const existCliente = await ClienteModel.findOne({ correo });
 
-    // Generar código
-    const verificationCode = crypto.randomBytes(3).toString("hex");
+        if (existCliente) {
+            return res.status(400).json({
+                message: "El correo ya está registrado"
+            });
+        }
 
-    // Crear token
-    const tokenCode = jsonwebtoken.sign(
-      {
-        nombre,
-        Apellido,
-        correo,
-        contraseña: passwordHash,
-        telefono,
-        estado,
-        isVerified,
-        loginAttemps,
-        timeOut,
-        verificationCode
-      },
-      config.JWT.secret,
-      { expiresIn: "15m" }
-    );
+        // Encriptar contraseña
+        const passwordHash = await bcryptjs.hash(contrasena, 10);
 
-    // Guardar cookie
-    res.cookie("VerificationToken", tokenCode, {
-      maxAge: 15 * 60 * 1000
-    });
+        // Generar código de verificación
+        const verificationCode = crypto.randomBytes(3).toString("hex");
 
-    // Configurar correo
-    const transporter = nodemailer.createTransport({
-      service: "gmail",
-      auth: {
-        user: config.email.user_email,
-        pass: config.email.user_password
-      }
-    });
+        // Datos de Cloudinary
+        let fotoPerfil = "";
+        let public_id = "";
 
-    const mailOptions = {
-      from: config.email.user_email,
-      to: correo,
-      subject: "Código de Verificación",
-      text:"Para verificar tu cuenta utiliza este código: " +
-        verificationCode +". Expira en 15 minutos."
-    };
+        if (req.file) {
+            fotoPerfil = req.file.path;
+            public_id = req.file.filename;
+        }
 
-    transporter.sendMail(mailOptions, (error, info) => {
+        // Crear token temporal
+        const tokenCode = jsonwebtoken.sign(
+            {
+                nombre,
+                Apellido,
+                correo,
+                contrasena: passwordHash,
+                telefono,
+                estado,
+                fotoPerfil,
+                public_id,
+                isVerified: false,
+                loginAttemps: loginAttemps || 0,
+                timeOut,
+                verificationCode
+            },
+            config.JWT.secret,
+            {
+                expiresIn: "15m"
+            }
+        );
 
-      if (error) {
+        // Guardar cookie
+        res.cookie("VerificationToken", tokenCode, {
+            maxAge: 15 * 60 * 1000,
+            httpOnly: true
+        });
+
+        // Configurar correo
+        const transporter = nodemailer.createTransport({
+            service: "gmail",
+            auth: {
+                user: config.email.user_email,
+                pass: config.email.user_password
+            }
+        });
+
+        const mailOptions = {
+            from: config.email.user_email,
+            to: correo,
+            subject: "Código de Verificación",
+            text:
+                "Para verificar tu cuenta utiliza este código: " +
+                verificationCode +
+                ". Expira en 15 minutos."
+        };
+
+        transporter.sendMail(mailOptions, (error) => {
+
+            if (error) {
+                console.log(error);
+
+                return res.status(500).json({
+                    message: "Error al enviar el correo"
+                });
+            }
+
+            return res.status(200).json({
+                message: "Usuario registrado, verifica tu correo"
+            });
+
+        });
+
+    } catch (error) {
+
         console.log(error);
-        return res.status(500).json({message: "Error al enviar el correo"});
-      }
 
-      return res.status(200).json({message: "Usuario registrado, verifica tu correo"});
+        return res.status(500).json({
+            message: "Error interno del servidor"
+        });
 
-    });
-  } catch (error) {
-    console.log(error);
-    return res.status(500).json({message: "Error interno del servidor"});
-  }
+    }
 };
+
 // VERIFICAR CÓDIGO
 RegistroClienteController.verifyCode = async (req, res) => {
-  try {
-    const { verificationCodeRequest } = req.body;
 
-    const token = req.cookies.VerificationToken;
+    try {
 
-    const decoded = jsonwebtoken.verify(
-      token,
-      config.JWT.secret
-    );
+        const { verificationCodeRequest } = req.body;
 
-    const {
-      nombre,
-      Apellido,
-      correo,
-      contraseña,
-      telefono,
-      estado,
-      verificationCode: storedCode,
-      loginAttemps,
-      timeOut
-    } = decoded;
+        const token = req.cookies.VerificationToken;
 
-    // Comparar códigos
-    if (verificationCodeRequest.trim().toLowerCase() !==storedCode.toLowerCase()) 
-    {
-      return res.status(400).json({message: "Código de verificación inválido"});
+        if (!token) {
+            return res.status(400).json({
+                message: "No se encontró el token de verificación"
+            });
+        }
+
+        const decoded = jsonwebtoken.verify(
+            token,
+            config.JWT.secret
+        );
+
+        const {
+            nombre,
+            Apellido,
+            correo,
+            contrasena,
+            telefono,
+            estado,
+            fotoPerfil,
+            public_id,
+            loginAttemps,
+            timeOut,
+            verificationCode: storedCode
+        } = decoded;
+
+        // Validar que se haya enviado un código
+        if (!verificationCodeRequest) {
+            return res.status(400).json({
+                message: "Debe ingresar el código de verificación"
+            });
+        }
+
+        // Comparar códigos
+        if (
+            verificationCodeRequest.trim().toLowerCase() !==
+            storedCode.toLowerCase()
+        ) {
+            return res.status(400).json({
+                message: "Código de verificación inválido"
+            });
+        }
+
+        // Crear cliente
+        const newCliente = new ClienteModel({
+            nombre,
+            Apellido,
+            correo,
+            contrasena,
+            telefono,
+            estado,
+            fotoPerfil,
+            public_id,
+            isVerified: true,
+            loginAttemps,
+            timeOut
+        });
+
+        await newCliente.save();
+
+        // Eliminar cookie
+        res.clearCookie("VerificationToken");
+
+        return res.status(200).json({
+            message: "Cuenta verificada correctamente"
+        });
+
+    } catch (error) {
+
+        console.log(error);
+
+        return res.status(500).json({
+            message: "Error interno del servidor"
+        });
+
     }
-
-    // Crear usuario
-    const newCliente = new ClienteModel({
-      nombre,
-      Apellido,
-      correo,
-      contraseña,
-      telefono,
-      estado,
-      isVerified: true,
-      loginAttemps,
-      timeOut
-    });
-
-    await newCliente.save();
-
-    // Borrar cookie
-    res.clearCookie("VerificationToken");
-
-    return res.status(200).json({message: "Cuenta verificada correctamente"});
-
-  } catch (error) {
-    console.log(error);
-    return res.status(500).json({message: "Error interno del servidor"});
-  }
 };
 
 export default RegistroClienteController;

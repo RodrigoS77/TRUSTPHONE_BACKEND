@@ -10,7 +10,7 @@ const ClientesSchema = new Schema({
     correo: {
         type: String
     },
-    contraseña: {
+    contrasena: {
         type: String
     },
     telefono: {
@@ -22,6 +22,12 @@ const ClientesSchema = new Schema({
     fechaRegistro: {
         type: Date,
         default: Date.now
+    },
+    fotoPerfil:{
+        type: String
+    },
+    public_id: {
+        type: String
     },
     isVerified: {
         type: Boolean,
