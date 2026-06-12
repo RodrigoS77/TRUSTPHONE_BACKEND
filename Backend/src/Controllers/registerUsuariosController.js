@@ -6,6 +6,7 @@ import bcrypt from 'bcrypt';
 import UsersModel from '../Models/Usuarios.js';
 
 import {config} from "../../config.js"
+import HTMLVerificarCorreo from "../utils/enviarCorreoVerificacion.js"
 
 const RegistroUsuariosController = {}
 
@@ -68,10 +69,7 @@ RegistroUsuariosController.registerUsuario = async (req, res) => {
             from: config.email.user_email,
             to: email,
             subject: 'Codigo de Verificacion',
-            text: 
-                "Para verificar tu cuenta, utiliza este código: " + 
-                verificationCode +
-                "expira en 15 minutos."
+            html: HTMLVerificarCorreo(verificationCode)
         };
 
         transporter.sendMail(mailOptions, (error, info) => {

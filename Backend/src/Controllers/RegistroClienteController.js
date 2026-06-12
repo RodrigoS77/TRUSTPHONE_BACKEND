@@ -16,10 +16,7 @@ RegistroClienteController.registerCliente = async (req, res) => {
     correo,
     contraseña,
     telefono,
-    estado,
-    isVerified,
-    loginAttemps,
-    timeOut
+    estado
   } = req.body;
 
   try {
@@ -36,28 +33,21 @@ RegistroClienteController.registerCliente = async (req, res) => {
     // Generar código
     const verificationCode = crypto.randomBytes(3).toString("hex");
 
-    // Crear token
-    const tokenCode = jsonwebtoken.sign(
-      {
-        nombre,
-        Apellido,
-        correo,
-        contraseña: passwordHash,
-        telefono,
-        estado,
-        isVerified,
-        loginAttemps,
-        timeOut,
-        verificationCode
-      },
-      config.JWT.secret,
-      { expiresIn: "15m" }
-    );
-
-    // Guardar cookie
-    res.cookie("VerificationToken", tokenCode, {
-      maxAge: 15 * 60 * 1000
+    // Guardar usuario en base de datos como no verificado
+    const newCliente = new ClienteModel({
+      nombre,
+      Apellido,
+      correo,
+      contraseña: passwordHash,
+      telefono,
+      estado,
+      isVerified: false,
+      verificationCode,
+      loginAttemps: 0,
+      timeOut: null
     });
+
+    await newCliente.save();
 
     // Configurar correo
     const transporter = nodemailer.createTransport({
@@ -94,56 +84,33 @@ RegistroClienteController.registerCliente = async (req, res) => {
 // VERIFICAR CÓDIGO
 RegistroClienteController.verifyCode = async (req, res) => {
   try {
-    const { verificationCodeRequest } = req.body;
+    const { correo, verificationCodeRequest } = req.body;
 
-    const token = req.cookies.VerificationToken;
+    const user = await ClienteModel.findOne({ correo });
 
-    const decoded = jsonwebtoken.verify(
-      token,
-      config.JWT.secret
-    );
-
-    const {
-      nombre,
-      Apellido,
-      correo,
-      contraseña,
-      telefono,
-      estado,
-      verificationCode: storedCode,
-      loginAttemps,
-      timeOut
-    } = decoded;
-
-    // Comparar códigos
-    if (verificationCodeRequest.trim().toLowerCase() !==storedCode.toLowerCase()) 
-    {
-      return res.status(400).json({message: "Código de verificación inválido"});
+    if (!user) {
+      return res.status(404).json({ message: "Usuario no encontrado" });
     }
 
-    // Crear usuario
-    const newCliente = new ClienteModel({
-      nombre,
-      Apellido,
-      correo,
-      contraseña,
-      telefono,
-      estado,
-      isVerified: true,
-      loginAttemps,
-      timeOut
-    });
+    if (user.isVerified) {
+      return res.status(400).json({ message: "La cuenta ya está verificada" });
+    }
 
-    await newCliente.save();
+    // Comparar códigos
+    if (!user.verificationCode || verificationCodeRequest.trim().toLowerCase() !== user.verificationCode.toLowerCase()) {
+      return res.status(400).json({ message: "Código de verificación inválido" });
+    }
 
-    // Borrar cookie
-    res.clearCookie("VerificationToken");
+    // Actualizar usuario
+    user.isVerified = true;
+    user.verificationCode = null;
+    await user.save();
 
-    return res.status(200).json({message: "Cuenta verificada correctamente"});
+    return res.status(200).json({ message: "Cuenta verificada correctamente" });
 
   } catch (error) {
     console.log(error);
-    return res.status(500).json({message: "Error interno del servidor"});
+    return res.status(500).json({ message: "Error interno del servidor" });
   }
 };
 
