@@ -5,7 +5,6 @@ const router = express.Router();
 
 router.route('/')
     .get(UsuariosController.getUsuarios)
-    .post(UsuariosController.insertUsuario);
 
 router.route('/:id')
     .get(UsuariosController.getUsuarioById)
