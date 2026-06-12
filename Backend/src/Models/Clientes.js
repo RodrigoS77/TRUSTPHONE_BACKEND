@@ -31,6 +31,9 @@ const ClientesSchema = new Schema({
     }, 
     timeOut: {
         type: Date,
+    },
+    verificationCode: {
+        type: String,
     }
 },{
     timestamps: true,

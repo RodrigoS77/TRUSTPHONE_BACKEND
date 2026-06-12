@@ -1,4 +1,4 @@
-import bcrypt from 'bcrypt';
+import bcryptjs from 'bcryptjs';
 import jsonwebtoken from 'jsonwebtoken';
 
 import ClienteModel from '../Models/Clientes.js';
@@ -16,11 +16,19 @@ loginClienteController.login = async (req, res) => {
             return res.status(404).json({ message: 'Cliente no encontrado' });
         }
 
+        // Verificar si la cuenta está verificada
+        if (!userFound.isVerified) {
+            return res.status(403).json({ 
+                message: 'Tu cuenta no ha sido verificada. Revisa tu correo electrónico.',
+                needsVerification: true 
+            });
+        }
+
         if (userFound.timeOut && userFound.timeOut > Date.now()) {
             return res.status(403).json({ message: 'Cuenta bloqueada' });
         }
 
-        const isMatch = await bcrypt.compare(contraseña, userFound.contraseña);
+        const isMatch = await bcryptjs.compare(contraseña, userFound.contraseña);
 
         if (!isMatch) {
             userFound.loginAttemps = (userFound.loginAttemps || 0) + 1;
@@ -38,6 +46,11 @@ loginClienteController.login = async (req, res) => {
             return res.status(400).json({ message: 'Contraseña incorrecta' });
         }
 
+        // Reset login attempts on successful login
+        userFound.loginAttemps = 0;
+        userFound.timeOut = null;
+        await userFound.save();
+
         const token = jsonwebtoken.sign(
             {id : userFound._id, userType: "cliente"},
             config.JWT.secret,
@@ -46,8 +59,19 @@ loginClienteController.login = async (req, res) => {
 
         res.cookie("AuthCookie", token);
 
+        // Retornar datos del usuario (sin contraseña) para evitar segunda petición
+        const userData = {
+            _id: userFound._id,
+            nombre: userFound.nombre,
+            Apellido: userFound.Apellido,
+            correo: userFound.correo,
+            telefono: userFound.telefono,
+            estado: userFound.estado,
+            fechaRegistro: userFound.fechaRegistro,
+            isVerified: userFound.isVerified
+        };
 
-        return res.status(200).json({ message: 'Login exitoso' });
+        return res.status(200).json({ message: 'Login exitoso', user: userData });
 
     } catch (error) {
         console.log("error" + error);
@@ -56,3 +80,4 @@ loginClienteController.login = async (req, res) => {
 }
 
 export default loginClienteController;
+
