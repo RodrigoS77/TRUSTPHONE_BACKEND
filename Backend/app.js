@@ -13,12 +13,13 @@ import loginUsuarioRoutes from './src/Routes/LoginUsuarios.js';
 import RegistroUsuarioRoutes from './src/Routes/registroUsuario.js';
 import TecnicosRoutes from "./src/Routes/Tecnicos.js";
 import RevisionCelularesRoutes from "./src/Routes/RevisionCelulares.js";
+import PedidosRoutes from "./src/Routes/Pedidos.js";
 
 const app = express();
 
 app.use(
     cors({
-        origin: ["http://localhost:5173", "http://localhost:5174"],
+        origin: true,
         credentials: true
     })
 );
@@ -33,11 +34,12 @@ app.use('/api/clientes', ClientesRouter);
 app.use('/api/registroClientes', RegistroClientes);
 app.use('/api/loginClientes', loginClienteController);
 app.use('/api/logout', LogOutController);
-app.use('/api/RecuperarContrasena', RecuperarContraseña)
+app.use('/api/RecuperarContrasena', RecuperarContraseña);
 app.use('/api/usuarios', UsuariosRoutes);
 app.use('/api/loginUsuarios', loginUsuarioRoutes);
 app.use('/api/registroUsuarios', RegistroUsuarioRoutes);
 app.use('/api/tecnicos', TecnicosRoutes);
 app.use('/api/revisionCelulares', RevisionCelularesRoutes);
+app.use('/api/pedidos', PedidosRoutes);
 
 export default app;

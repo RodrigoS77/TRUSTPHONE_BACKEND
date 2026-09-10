@@ -1,7 +1,13 @@
-import dotenv from "dotenv"
+import dotenv from "dotenv";
+import path from "path";
+import { fileURLToPath } from "url";
 
-//Ejecutamos la libreria dotenv
-dotenv.config()
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+// Carga .env de la carpeta actual y de la raíz TRUSTPHONE_BACKEND
+dotenv.config();
+dotenv.config({ path: path.resolve(__dirname, "../.env") });
 
 export const config = {
     db:{
