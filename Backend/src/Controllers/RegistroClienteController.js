@@ -105,7 +105,8 @@ RegistroClienteController.registerCliente = async (req, res) => {
             }
 
             return res.status(200).json({
-                message: "Usuario registrado, verifica tu correo"
+                message: "Usuario registrado, verifica tu correo",
+                token: tokenCode
             });
 
         });
@@ -128,12 +129,22 @@ RegistroClienteController.verifyCode = async (req, res) => {
 
         const { verificationCodeRequest } = req.body;
 
-        const token = req.cookies.VerificationToken;
+        let token = req.cookies?.VerificationToken || req.body?.token;
 
         if (!token) {
             return res.status(400).json({
                 message: "No se encontró el token de verificación"
             });
+        }
+
+        if (typeof token === 'string') {
+            if (token.includes(',')) {
+                token = token.split(',')[0].trim();
+            }
+            if (token.includes(';')) {
+                token = token.split(';')[0].trim();
+            }
+            token = token.replace(/^VerificationToken=/, '').trim();
         }
 
         const decoded = jsonwebtoken.verify(
