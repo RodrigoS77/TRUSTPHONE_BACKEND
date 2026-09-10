@@ -65,8 +65,13 @@ loginClienteController.login = async (req, res) => {
             cliente: {
                 _id: userFound._id,
                 nombre: userFound.nombre,
+                Apellido: userFound.Apellido || '',
+                apellido: userFound.Apellido || '',
                 correo: userFound.correo,
                 telefono: userFound.telefono || '',
+                fecha_nacimiento: userFound.fecha_nacimiento || userFound.fechaNacimiento || '',
+                fechaNacimiento: userFound.fecha_nacimiento || userFound.fechaNacimiento || '',
+                fotoPerfil: userFound.fotoPerfil || '',
                 isVerified: userFound.isVerified,
             }
         });

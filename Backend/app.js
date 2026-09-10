@@ -14,6 +14,8 @@ import RegistroUsuarioRoutes from './src/Routes/registroUsuario.js';
 import TecnicosRoutes from "./src/Routes/Tecnicos.js";
 import RevisionCelularesRoutes from "./src/Routes/RevisionCelulares.js";
 import PedidosRoutes from "./src/Routes/Pedidos.js";
+import DireccionesRoutes from "./src/Routes/Direcciones.js";
+import MetodosPagoRoutes from "./src/Routes/MetodosPago.js";
 
 const app = express();
 
@@ -41,5 +43,7 @@ app.use('/api/registroUsuarios', RegistroUsuarioRoutes);
 app.use('/api/tecnicos', TecnicosRoutes);
 app.use('/api/revisionCelulares', RevisionCelularesRoutes);
 app.use('/api/pedidos', PedidosRoutes);
+app.use('/api/direcciones', DireccionesRoutes);
+app.use('/api/metodosPago', MetodosPagoRoutes);
 
 export default app;
