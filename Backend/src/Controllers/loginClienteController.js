@@ -60,7 +60,16 @@ loginClienteController.login = async (req, res) => {
 
         res.cookie("AuthCookie", token);
 
-        return res.status(200).json({ message: 'Login exitoso'});
+        return res.status(200).json({ 
+            message: 'Login exitoso',
+            cliente: {
+                _id: userFound._id,
+                nombre: userFound.nombre,
+                correo: userFound.correo,
+                telefono: userFound.telefono || '',
+                isVerified: userFound.isVerified,
+            }
+        });
 
     } catch (error) {
         console.log("error" + error);
